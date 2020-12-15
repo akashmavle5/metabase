@@ -8,12 +8,17 @@
 
 (models/defmodel PulseCard :pulse_card)
 
-(defn- next-position-for
+(defn next-position-for
+  "Return the next available `pulse_card.position` for the given `pulse`"
   [pulse-id]
-  (->> (db/select PulseCard :pulse_id pulse-id)
-       (map :position)
-       (apply max)
-       inc))
+  {:pre [(integer? pulse-id)]}
+  (-> (db/query {:select [:%max.position]
+                 :from   [PulseCard]
+                 :where  [:= :pulse_id pulse-id]})
+      (first)
+      (:max)
+      (some-> inc)
+      (or 0)))
 
 (def ^:private NewPulseCard
   {:card_id                      su/IntGreaterThanZero
